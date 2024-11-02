@@ -1,6 +1,6 @@
 use std::{
     fmt::Display,
-    io::{self, BufRead, BufReader},
+    io::{self, BufRead, BufReader, Write},
     net::{self, TcpStream},
 };
 
@@ -34,10 +34,20 @@ fn handle_client(mut stream: TcpStream) {
     //println!("Request: {:#?}", http_request);
 
     let request = parse_request(http_request).unwrap();
-    println!("{}", request)
+    println!("{}", request);
+
+    println!("So how do we send or write a response?");
+
+    let response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, world!";
+    stream.write_all(response.as_bytes()).unwrap();
+    stream.flush().unwrap();
 }
 
 fn parse_request(req: Vec<String>) -> Result<Request, io::Error> {
+    if req.is_empty() {
+        return Err(io::Error::new(io::ErrorKind::InvalidData, "Empty request"));
+    }
+
     let mut method: String = String::new();
     let mut path: String = String::new();
     let mut version: String = String::new();
