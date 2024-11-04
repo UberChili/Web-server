@@ -48,40 +48,25 @@ fn parse_request(req: Vec<String>) -> Result<Request, io::Error> {
         return Err(io::Error::new(io::ErrorKind::InvalidData, "Empty request"));
     }
 
-    let mut method: String = String::new();
-    let mut path: String = String::new();
-    let mut version: String = String::new();
-    let mut host: String = String::new();
-    let mut connection: String = String::new();
+    let mut request = Request {
+        method: String::new(),
+        path: String::new(),
+        version: String::new(),
+        host: String::new(),
+        connection: String::new(),
+    };
 
     for line in req {
         if line.contains("HTTP") {
-            let method_line: Vec<_> = line
-                .split_whitespace()
-                .map(|word| word.to_string())
-                .collect();
-            method = method_line[0].clone();
-            path = method_line[1].clone();
-            version = method_line[method_line.len() - 1].clone();
-        } else if line.contains("Host:") {
-            let host_line: Vec<_> = line
-                .split_whitespace()
-                .map(|word| word.to_string())
-                .collect();
-            host = host_line[host_line.len() - 1].clone();
-        } else if line.contains("Connection:") {
-            let connection_line: Vec<_> = line
-                .split_whitespace()
-                .map(|word| word.to_string())
-                .collect();
-            connection = connection_line[connection_line.len() - 1].clone();
+            let mut parts = line.split_whitespace();
+            request.method = parts.next().unwrap_or("").to_string();
+            request.path = parts.next().unwrap_or("").to_string();
+            request.version = parts.next().unwrap_or("").to_string();
+        } else if line.starts_with("Host:") {
+            request.host = line.split_whitespace().nth(1).unwrap_or("").to_string();
+        } else if line.starts_with("Connection:") {
+            request.connection = line.split_whitespace().nth(1).unwrap_or("").to_string();
         }
     }
-    Ok(Request {
-        method,
-        path,
-        version,
-        host,
-        connection,
-    })
+    Ok(request)
 }
