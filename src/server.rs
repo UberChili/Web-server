@@ -1,4 +1,5 @@
 use std::{
+    fs,
     io::{self, BufRead, BufReader, Write},
     net::TcpStream,
 };
@@ -19,27 +20,16 @@ pub fn handle_client(mut stream: TcpStream) {
         .map(|result| result.unwrap())
         .take_while(|line| !line.is_empty())
         .collect();
-    //println!("Request: {:#?}", http_request);
 
     let request = parse_request(http_request).unwrap();
     println!("{:?}", request);
 
-    //let mut file = std::fs::File::open(&request.path[1..]).unwrap();
-    //let mut contents = String::new();
-    //file.read_to_string(&mut contents).unwrap();
+    let contents = fs::read_to_string("index.html").unwrap();
+    let cont_lenght = contents.len();
 
-    //println!("{contents}");
-    //
-    let mut thing = String::new();
-    if request.method == "GET" && !request.path.is_empty() {
-        thing = request.path
-    }
+    let response = format!("HTTP/1.1 200 OK\r\nContent-Lenght: {cont_lenght}\r\n\r\n{contents}");
 
     //let response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, world!";
-    let response = format!(
-        "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, {}!",
-        thing
-    );
     stream.write_all(response.as_bytes()).unwrap();
     stream.flush().unwrap();
 }
