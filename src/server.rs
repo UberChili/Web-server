@@ -1,27 +1,15 @@
 use std::{
-    fmt::Display,
     io::{self, BufRead, BufReader, Write},
     net::TcpStream,
 };
 
+#[derive(Debug)]
 struct Request {
     method: String,
     path: String,
     version: String,
     host: String,
     connection: String,
-}
-
-impl Display for Request {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "Request {{",)?;
-        writeln!(f, " Method: {}", self.method)?;
-        writeln!(f, " Path: {}", self.path)?;
-        writeln!(f, " Version: {}", self.version)?;
-        writeln!(f, " Host: {}", self.host)?;
-        writeln!(f, " Connection: {}", self.connection)?;
-        write!(f, "}}")
-    }
 }
 
 pub fn handle_client(mut stream: TcpStream) {
@@ -34,11 +22,24 @@ pub fn handle_client(mut stream: TcpStream) {
     //println!("Request: {:#?}", http_request);
 
     let request = parse_request(http_request).unwrap();
-    println!("{}", request);
+    println!("{:?}", request);
 
-    println!("So how do we send or write a response?");
+    //let mut file = std::fs::File::open(&request.path[1..]).unwrap();
+    //let mut contents = String::new();
+    //file.read_to_string(&mut contents).unwrap();
 
-    let response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, world!";
+    //println!("{contents}");
+    //
+    let mut thing = String::new();
+    if request.method == "GET" && !request.path.is_empty() {
+        thing = request.path
+    }
+
+    //let response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, world!";
+    let response = format!(
+        "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, {}!",
+        thing
+    );
     stream.write_all(response.as_bytes()).unwrap();
     stream.flush().unwrap();
 }
