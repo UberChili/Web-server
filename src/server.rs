@@ -24,16 +24,29 @@ pub fn handle_connection(mut stream: TcpStream) {
     let request = parse_request(http_request).unwrap();
     println!("{:?}", request);
 
-    let mut response = String::new();
+    //let mut response = String::new();
     if request.method == "GET" {
         if request.path.ends_with(".html") {
-            response = html_response(request);
+            let response = html_response(request);
+            stream.write_all(response.as_bytes()).unwrap();
+            stream.flush().unwrap();
         } else if request.path.ends_with(".png")
             || request.path.ends_with(".jpeg")
             || request.path.ends_with(".jpg")
         {
-            response = img_response(request);
+            let response = img_response(request);
+            stream.write_all(response.as_bytes()).unwrap();
+            stream.flush().unwrap();
         }
+    } else {
+        let status_line = "HTTP/1.1 404 NOT FOUND";
+        let contents = fs::read_to_string("404.html").unwrap();
+        let cont_length = contents.len();
+
+        let response =
+            format!("{status_line}\r\nContent-Length: {cont_length}\r\n\r\nContents: {contents}");
+
+        stream.write_all(response.as_bytes()).unwrap();
     }
 
     //let contents = fs::read_to_string("index.html").unwrap();
@@ -42,8 +55,8 @@ pub fn handle_connection(mut stream: TcpStream) {
     //let response = format!("HTTP/1.1 200 OK\r\nContent-Lenght: {cont_lenght}\r\n\r\n{contents}");
 
     //let response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, world!";
-    stream.write_all(response.as_bytes()).unwrap();
-    stream.flush().unwrap();
+    //stream.write_all(response.as_bytes()).unwrap();
+    //stream.flush().unwrap();
 }
 
 fn img_response(req: Request) -> String {
